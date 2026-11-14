@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RAVYN MISSION LAB — NASA Space Mission Simulator</title>
+<style>
+  :root {
+    --bg: #050912;
+    --shell: #1b2436;
+    --panel: #0f172a;
+    --border: #475569;
+    --accent: #38bdf8;
+    --gold: #fde047;
+    --good: #4ade80;
+    --warn: #fbbf24;
+    --bad: #f87171;
+    --muted: #8fb3cc;
+    --text: #f8fafc;
+    --font: 'Courier New', Courier, monospace;
+  }
+
+  * { box-sizing: border-box; user-select: none; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: radial-gradient(circle at top, #172542 0%, var(--bg) 78%);
+    color: var(--text);
+    font-family: var(--font);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    overflow-x: hidden;
+  }
+
+  #console-shell {
+    width: 100%;
+    max-width: 900px;
+    background: var(--shell);
+    border: 4px solid #64748b;
+    border-radius: 16px;
+    padding: 12px;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.8), inset 0 2px 0 rgba(255,255,255,0.12);
+  }
+
+  #top-hud {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    background: var(--panel);
+    border: 3px solid #64748b;
+    border-radius: 8px;
+    padding: 7px 10px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+
+  .hud-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  #cml-objective-wrap { display: flex; align-items: center; gap: 8px; padding: 2px; border-radius: 6px; }
+  #cml-badge { background: linear-gradient(135deg, #1d4ed8, #0f172a); border: 2px solid #93c5fd; border-radius: 6px; padding: 4px 10px; font-size: 12px; font-weight: bold; color: #f8fafc; }
+  #hud-mission-pill { font-size: 13px; font-weight: bold; padding: 3px 9px; border-radius: 4px; background: #172554; border: 1px solid #38bdf8; color: var(--gold); }
+  #hud-location { font-size: 12px; font-weight: bold; color: var(--accent); }
+
+  .hud-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .hud-btn {
+    background: #1e293b; color: #f8fafc; border: 2px solid #64748b; border-radius: 6px;
+    padding: 4px 9px; font-family: inherit; font-size: 11px; font-weight: bold; cursor: pointer;
+  }
+  .hud-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .hud-btn.active { background: #0369a1; border-color: #7dd3fc; }
+
+  #metaphor-hud {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .meta-card {
+    background: #0b1220; border: 2px solid #334155; border-radius: 8px; padding: 6px 8px;
+    display: flex; align-items: center; gap: 8px; min-height: 50px;
+  }
+  .meta-card.alarm { border-color: var(--bad); box-shadow: 0 0 10px rgba(248, 113, 113, 0.45); }
+  .meta-canvas { width: 44px; height: 36px; background: #060b14; border: 1px solid #1e293b; border-radius: 4px; image-rendering: pixelated; flex-shrink: 0; }
+  .meta-info { flex: 1; min-width: 0; }
+  .meta-title { font-size: 9px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.6px; }
+  .meta-val { font-size: 12px; font-weight: bold; margin-top: 2px; white-space: nowrap; }
+  .meter-track { width: 100%; height: 6px; background: #1e293b; border-radius: 3px; overflow: hidden; margin-top: 4px; }
+  .meter-fill { height: 100%; transition: width 0.2s; }
+
+  .val-good { color: var(--good); }
+  .val-warn { color: var(--warn); }
+  .val-bad  { color: var(--bad); }
+  .val-info { color: var(--accent); }
+
+  #screen-wrap {
+    position: relative; width: 100%; aspect-ratio: 16 / 11; background: #000;
+    border: 4px solid #0f172a; border-radius: 8px; overflow: hidden;
+  }
+  canvas#gameCanvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+</style>
+</head>
+<body>
+<div id="console-shell">
+  <div id="top-hud">
+    <div class="hud-left">
+      <div id="cml-objective-wrap">
+        <div id="cml-badge">CML 1/4: CONCEPT</div>
+        <div id="hud-mission-pill">Goal: Brief w/ Flight Dir.</div>
+      </div>
+      <div id="hud-location">1F: Lobby &amp; Mission Control</div>
+    </div>
+    <div class="hud-actions">
+      <button class="hud-btn" id="btn-codex">NASA Codex [C]</button>
+      <button class="hud-btn active" id="btn-bgm">BGM: ON</button>
+      <button class="hud-btn active" id="btn-sfx">SFX: ON</button>
+      <button class="hud-btn" id="btn-reset">Reset</button>
+    </div>
+  </div>
+
+  <div id="metaphor-hud">
+    <div class="meta-card" id="card-crane">
+      <canvas class="meta-canvas" id="cvs-crane" width="44" height="36"></canvas>
+      <div class="meta-info"><div class="meta-title">Crane Scale</div><div class="meta-val" id="meta-mass">0 / 0 kg</div></div>
+    </div>
+    <div class="meta-card" id="card-power">
+      <canvas class="meta-canvas" id="cvs-bulb" width="44" height="36"></canvas>
+      <div class="meta-info"><div class="meta-title">Battery/Bulb</div><div class="meta-val" id="meta-power">+0 W</div></div>
+    </div>
+    <div class="meta-card" id="card-budget">
+      <div class="meta-info">
+        <div class="meta-title">Budget ($50M Cap)</div>
+        <div class="meta-val" id="meta-budget">$0.0M / $50M</div>
+        <div class="meter-track"><div class="meter-fill" id="fill-budget" style="width:0%; background:#4ade80;"></div></div>
+      </div>
+    </div>
+    <div class="meta-card" id="card-science">
+      <div class="meta-info">
+        <div class="meta-title">Science Stream</div>
+        <div class="meta-val val-info" id="meta-science">0 pts</div>
+        <div class="meter-track"><div class="meter-fill" id="fill-science" style="width:0%; background:#38bdf8;"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-wrap">
+    <canvas id="gameCanvas" width="480" height="330"></canvas>
+  </div>
+</div>
+</body>
+</html>
