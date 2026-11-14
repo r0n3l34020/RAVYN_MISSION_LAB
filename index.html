@@ -34,7 +34,26 @@
     padding: 10px;
     overflow-x: hidden;
   }
+  
+<div id="title-screen">
+  <canvas id="titleCanvas" width="480" height="330"></canvas>
+  <div class="title-content">
+    <div class="title-badge">NASA SPACE APPS CHALLENGE // STAGE 1</div>
+    <h1 class="title-main">RAVYN MISSION LAB</h1>
+    <p class="title-sub">NASA Systems Engineering &amp; Space Mission Simulator</p>
+    <button id="btn-enter-facility">ENTER FACILITY [ENTER]</button>
+  </div>
+</div>
 
+<div id="tutorial-overlay">
+  <div id="tutorial-hole"></div>
+  <div id="tutorial-card">
+    <div class="tut-step-tag" id="tut-step-tag">ORIENTATION // STEP 1</div>
+    <div class="tut-body" id="tut-body">Instruction text here.</div>
+    <button id="btn-tut-next">NEXT [SPACE]</button>
+  </div>
+</div>
+  
   #console-shell {
     width: 100%;
     max-width: 900px;
